@@ -19,15 +19,6 @@ app.get('/users', (req, res)=>{
     client.end;
 })
 
-app.get('/users/:id', (req, res)=>{
-    client.query(`Select * from users where id='${req.params.id}'`, (err, result)=>{
-        if(!err){
-            res.send(result.rows);
-        }
-    });
-    client.end;
-})
-
 app.post('/users', (req, res)=> {
     const user = req.body;
     console.log("request body "+ user);
@@ -64,6 +55,8 @@ app.put('/users/:id', (req, res)=> {
     client.end;
 })
 app.delete('/users/:id', (req, res)=> {
+    // console.log(req.params);
+    
     let insertQuery = `delete from users where id='${req.params.id}'`
 
     client.query(insertQuery, (err, result)=>{
@@ -74,3 +67,28 @@ app.delete('/users/:id', (req, res)=> {
     })
     client.end;
 })
+
+app.get('/users/:queryStr', (req, res)=> {
+    if(isNaN(req.params.queryStr)){
+        const queryStr = req.params.queryStr;
+        const usp = new URLSearchParams(queryStr);
+        const loginSub = usp.get('loginSubstring');
+        const lim = usp.get('limit');
+    
+        client.query(` SELECT * FROM USERS WHERE login ~ '${loginSub}' LIMIT ${lim};`, (err, result)=>{
+            if(!err){
+                res.send(result.rows);
+            }
+        });
+        client.end;
+    }
+    else{
+        client.query(`Select * from users where id='${req.params.queryStr}'`, (err, result)=>{
+            if(!err){
+                res.send(result.rows);
+            }
+        });
+        client.end;
+    }
+    
+});

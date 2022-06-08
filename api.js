@@ -2,10 +2,14 @@ const client = require('./connection.js')
 const express = require('express');
 const app = express();
 var bodyParser = require('body-parser');
+const { Pool } = require('pg/lib');
 app.use(bodyParser.json());
+var pool = require('pg').Pool;
+
+const {check} = require('express-validator');
 
 app.listen(3300, ()=>{
-    console.log("Sever is now listening at port 3300");
+    console.log("Server is now listening at port 3300");
 })
 
 client.connect();
@@ -19,9 +23,25 @@ app.get('/users', (req, res)=>{
     client.end;
 })
 
-app.post('/users', (req, res)=> {
+app.post('/users', async (req, res)=> {
     const user = req.body;
-    console.log("request body "+ user);
+    //validtion
+    //all fields required
+    if (!user.id || !user.login || !user.password || !user.age || !user.isdeleted)
+      return res.status(400).json({ msg: "Not all fields have been entered" });
+    //age validation 
+    if(user.age < 4 || user.age > 130){
+        return res.status(400).json({ msg: "age should be between 4 and 130" });
+    }
+    //password validation
+    let letterNumber = /^[0-9a-zA-Z]+$/;
+    // if(!user.password.value.match(letterNumber)){
+    if(!letterNumber.test(user.password)){
+        return res
+        .status(400)
+        .json({ msg: "The password needs have both alphabets and numbers!!" });
+    }
+    
     let insertQuery = `insert into users(id, login, password, age, isdeleted)
                        values('${user.id}', '${user.login}', '${user.password}', ${user.age}, ${user.isdeleted})`
 
@@ -31,7 +51,9 @@ app.post('/users', (req, res)=> {
         }
         else{ 
             
-            console.log(err.message);
+            return res
+         .status(400)
+         .json({ msg: err.message});
          }
     })
     client.end;

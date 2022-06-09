@@ -2,11 +2,11 @@ const client = require('./connection.js')
 const express = require('express');
 const app = express();
 var bodyParser = require('body-parser');
-const { Pool } = require('pg/lib');
-app.use(bodyParser.json());
-var pool = require('pg').Pool;
 
-const {check} = require('express-validator');
+app.use(bodyParser.json());
+
+
+
 
 app.listen(3300, ()=>{
     console.log("Server is now listening at port 3300");
@@ -36,10 +36,26 @@ app.post('/users', async (req, res)=> {
     //password validation
     let letterNumber = /^[0-9a-zA-Z]+$/;
     // if(!user.password.value.match(letterNumber)){
-    if(!letterNumber.test(user.password)){
+    let alphaCheck = false, numCheck = false;
+    for(let i = 0 ; i < user.password.length ; i++){
+        if(user.password[i] >= '0' && user.password[i] <= '9')
+            numCheck = true;
+        if(user.password[i] >= 'a' && user.password[i] <= 'z')
+            alphaCheck = true;
+        if(user.password[i] >= 'A' && user.password[i] <= 'Z')
+            alphaCheck = true;
+    }
+    if(!letterNumber.test(user.password))
+    {
+    
         return res
         .status(400)
-        .json({ msg: "The password needs have both alphabets and numbers!!" });
+        .json({ msg: "The password needs only alphabets and numbers!!" });
+    }
+    if (!alphaCheck || !numCheck){
+        return res
+        .status(400)
+        .json({ msg: "The password needs to have alphabets and numbers!!" });
     }
     
     let insertQuery = `insert into users(id, login, password, age, isdeleted)
